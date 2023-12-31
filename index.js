@@ -4,8 +4,6 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const text = "Hola, este es un texto de prueba.";
-
 axios
   .post(
     "https://texttospeech.googleapis.com/v1beta1/text:synthesize",
@@ -14,14 +12,14 @@ axios
         audioEncoding: "LINEAR16",
         effectsProfileId: ["headphone-class-device"],
         pitch: 0,
-        speakingRate: 1,
+        speakingRate: 1.1,
       },
       input: {
-        text,
+        text: fs.readFileSync("./input.txt", { encoding: "utf-8" }),
       },
       voice: {
         languageCode: "es-US",
-        name: "es-US-Polyglot-1",
+        name: "es-US-News-E",
       },
     },
     {
@@ -32,12 +30,22 @@ axios
     }
   )
   .then((res) => {
-    console.log(res.data.audioContent);
     const wavUrl = "data:audio/wav;base64," + res.data.audioContent;
     const buffer = Buffer.from(
       wavUrl.split("base64,")[1], // only use encoded data after "base64,"
       "base64"
     );
-    fs.writeFileSync("./audio.wav", buffer);
+    fs.mkdirSync(path.join(__dirname, "output"), { recursive: true });
+    fs.writeFileSync(
+      path.join(
+        __dirname,
+        "output",
+        `${new Date()
+          .toISOString()
+          .replaceAll(":", "_")
+          .replaceAll(".", "_")}.wav`
+      ),
+      buffer
+    );
     console.log(`wrote ${buffer.byteLength.toLocaleString()} bytes to file.`);
   });
